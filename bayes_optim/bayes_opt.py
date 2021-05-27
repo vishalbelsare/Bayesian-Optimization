@@ -248,6 +248,7 @@ class NarrowingBO(BO):
 
     def _create_acquisition(self, fun=None, par={}, return_dx=False):
         """Create an acquisition function that works in the reduced search space"""
+        # NOTE: this function is not needed if we decide to re-train the model in the subspace
         mask = np.array([v in self.inactive.keys() for v in self._search_space.var_name])
         return partial_argument(
             super()._create_acquisition(fun, par, return_dx),
@@ -278,17 +279,18 @@ class NarrowingBO(BO):
                 self.DoE_size is None or self.eval_count > self.DoE_size
             ):
                 decision, _metrics = self.narrowing_improving_fun(self.data, self.model, _metrics)
+
+                # NOTE: in this approach, we do not re-train the model in the reduced search space
+                # Shall we also try a different approach to re-train the model?
                 if decision:
                     inactive_var, value = self.narrowing_fun(
-                        self.data,
-                        self.model,
-                        set(self.search_space.var_name) - set(self.inactive.keys()),
+                        self.model, self.inactive, self.search_space
                     )
                     self.inactive[inactive_var] = value
-                    self.__set_argmax()
                     self.logger.info(f"fixing variable {inactive_var} to value {value}")
                 else:
                     if len(self.inactive) != 0:
                         v = self.inactive.popitem()[0]
                         self.logger.info(f"adding variable {v} back to the search space")
+                self.__set_argmax()
         return self.xopt, self.fopt, self.stop_dict

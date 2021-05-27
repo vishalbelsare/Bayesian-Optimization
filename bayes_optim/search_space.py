@@ -501,7 +501,7 @@ class SearchSpace(object):
 
     def __iter__(self):
         i = 0
-        while i < self.dim:
+        while i < self.dim:  # NOTE: should we return `Variable` instead?
             yield self.__getitem__(i)
             i += 1
 
@@ -770,7 +770,7 @@ class SearchSpace(object):
                 elif v["type"] in ["b", "bool"]:  # Boolean-valued
                     _vars = [Bool(name=k, default_value=default_value) for _ in N]
                 variables += _vars
-        elif source == "irace": # the configuration space from irace
+        elif source == "irace":  # the configuration space from irace
             param_names = param["names"]
             cont_params = [x for (x, y) in zip(param_names, param["types"]) if y == "r"]
             ordinal_params = [x for (x, y) in zip(param_names, param["types"]) if y == "i"]
