@@ -1,7 +1,6 @@
 import functools
-import os
 import sys
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -10,7 +9,7 @@ sys.path.insert(0, "../")
 
 from bayes_optim import EI, NarrowingBO, RealSpace, SearchSpace
 from bayes_optim.bayes_opt import partial_argument
-from bayes_optim.surrogate import GaussianProcess, Surrogate, trend
+from bayes_optim.surrogate import GaussianProcess, trend
 
 np.random.seed(123)
 dim = 25  # Should be greater than 2
@@ -83,7 +82,7 @@ def compute_func_std(
 
 
 def acquisition_var_selector(
-    model: Surrogate, inactive: Dict, search_space: SearchSpace
+    model, inactive: Dict, search_space: SearchSpace
 ) -> Tuple[str, float]:
     """A variable is deemed unimportant if the marginal acquisition function (by fixing the value
     of this variable) does not change much when varying the value of it.
