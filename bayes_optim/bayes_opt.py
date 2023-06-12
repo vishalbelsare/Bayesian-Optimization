@@ -5,7 +5,7 @@ from typing import Callable, Dict, List
 import numpy as np
 from joblib import Parallel, delayed
 
-from . import acquisition_fun as AcquisitionFunction
+from .acquisition import acquisition_fun as AcquisitionFunction
 from .base import BaseBO
 from .solution import Solution
 
@@ -78,6 +78,7 @@ class ParallelBO(BO):
         )
         assert self.n_point > 1
 
+        # TODO: this should be moved to the acquisition functions
         if self._acquisition_fun == "MGFI":
             self._par_name = "t"
             # Log-normal distribution for `t` supported on [0, \infty)
@@ -85,16 +86,14 @@ class ParallelBO(BO):
         elif self._acquisition_fun == "UCB":
             self._par_name = "alpha"
             # Logit-normal distribution for `alpha` supported on [0, 1]
-            self._sampler = lambda x: 1 / (
-                1 + np.exp((x["alpha"] * 4 - 2) + 0.6 * np.random.randn())
-            )
+            self._sampler = lambda x: 1 / (1 + np.exp((x["alpha"] * 4 - 2) + 0.6 * np.random.randn()))
         elif self._acquisition_fun == "EpsilonPI":
             self._par_name = "epsilon"
             self._sampler = None  # TODO: implement this!
         else:
             raise NotImplementedError
 
-        _criterion = getattr(AcquisitionFunction, self._acquisition_fun)()
+        _criterion = getattr(AcquisitionFunction, self._acquisition_fun)(model=kwargs["model"])
         if self._par_name not in self._acquisition_par:
             self._acquisition_par[self._par_name] = getattr(_criterion, self._par_name)
 
@@ -104,9 +103,7 @@ class ParallelBO(BO):
             _par = self._sampler(self._acquisition_par)
             _acquisition_par = copy(self._acquisition_par)
             _acquisition_par.update({self._par_name: _par})
-            criteria.append(
-                self._create_acquisition(par=_acquisition_par, return_dx=return_dx, fixed=fixed)
-            )
+            criteria.append(self._create_acquisition(par=_acquisition_par, return_dx=return_dx, fixed=fixed))
 
         if self.n_job > 1:
             __ = Parallel(n_jobs=self.n_job)(
@@ -162,9 +159,7 @@ class SelfAdaptiveBO(ParallelBO):
             _t_list.append(_t)
             _acquisition_par = copy(self._acquisition_par)
             _acquisition_par.update({"t": _t})
-            criteria.append(
-                self._create_acquisition(par=_acquisition_par, return_dx=return_dx, fixed=fixed)
-            )
+            criteria.append(self._create_acquisition(par=_acquisition_par, return_dx=return_dx, fixed=fixed))
 
         if self.n_job > 1:
             __ = Parallel(n_jobs=self.n_job)(

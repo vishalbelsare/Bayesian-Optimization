@@ -40,7 +40,7 @@ class SurrogateAggregation(object):
         if self.aggregation == "WS":
             y_hat = self.weights.dot(y_hat_)
             if eval_MSE:
-                MSE = (self.weights ** 2.0).dot(MSE_)
+                MSE = (self.weights**2.0).dot(MSE_)
 
         elif self.aggregation == "Tchebycheff":
             # TODO: implement this part

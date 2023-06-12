@@ -5,12 +5,21 @@ from typing import Callable, List, Tuple
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
 
-from ..search_space import RealSpace
-from ..utils import dynamic_penalty
+from ...search_space import RealSpace
+from ...utils import dynamic_penalty
 from .mies import MIES
 from .one_plus_one_cma_es import OnePlusOne_Cholesky_CMA, OnePlusOne_CMA
+from .option import default_AQ_max_FEs, default_AQ_n_restart, default_AQ_wait_iter
 
-__all__ = ["argmax_restart", "OnePlusOne_CMA", "OnePlusOne_Cholesky_CMA", "MIES"]
+__all__: List[str] = [
+    "argmax_restart",
+    "OnePlusOne_CMA",
+    "OnePlusOne_Cholesky_CMA",
+    "MIES",
+    "default_AQ_max_FEs",
+    "default_AQ_n_restart",
+    "default_AQ_wait_iter",
+]
 
 
 def finite_difference(f: Callable, x: np.ndarray, delta: float = 1e-5, **kwargs):
@@ -37,9 +46,7 @@ class Penalized:
         f, fg = tuple(map(lambda x: -1.0 * x, self.func(x)))
         if self.h or self.g:
             p = dynamic_penalty(x, t=self.t, equality=self.h, inequality=self.g)
-            pg = finite_difference(
-                dynamic_penalty, x, t=self.t, equality=self.h, inequality=self.g
-            )
+            pg = finite_difference(dynamic_penalty, x, t=self.t, equality=self.h, inequality=self.g)
             self.t += 1
             return f + p, fg + pg
         return f, fg
